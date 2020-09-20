@@ -136,10 +136,10 @@ uint8_t getChannel()
 {
 	uint8_t ch = 0;
 
-	ch |= !HAL_GPIO_ReadPin(CH_b0_GPIO_Port, CH_b0_Pin) << 0;
-	ch |= !HAL_GPIO_ReadPin(CH_b1_GPIO_Port, CH_b1_Pin) << 1;
-	ch |= !HAL_GPIO_ReadPin(CH_b2_GPIO_Port, CH_b2_Pin) << 2;
-	ch |= !HAL_GPIO_ReadPin(CH_b3_GPIO_Port, CH_b3_Pin) << 3;
+	ch |= !HAL_GPIO_ReadPin(CH_1_GPIO_Port, CH_1_Pin) << 2;
+	ch |= !HAL_GPIO_ReadPin(CH_2_GPIO_Port, CH_2_Pin) << 1;
+	ch |= !HAL_GPIO_ReadPin(CH_3_GPIO_Port, CH_3_Pin) << 0;
+	//ch |= !HAL_GPIO_ReadPin(CH_4_GPIO_Port, CH_4_Pin) << 3;
 
 	return ch;
 }
@@ -599,10 +599,10 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(USER_LED_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : USER_BUTTON_Pin CH_b0_Pin CH_b1_Pin CH_b2_Pin 
-                           CH_b3_Pin */
-  GPIO_InitStruct.Pin = USER_BUTTON_Pin|CH_b0_Pin|CH_b1_Pin|CH_b2_Pin 
-                          |CH_b3_Pin;
+  /*Configure GPIO pins : USER_BUTTON_Pin CH_1_Pin CH_2_Pin CH_3_Pin 
+                           CH_4_Pin */
+  GPIO_InitStruct.Pin = USER_BUTTON_Pin|CH_1_Pin|CH_2_Pin|CH_3_Pin 
+                          |CH_4_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);

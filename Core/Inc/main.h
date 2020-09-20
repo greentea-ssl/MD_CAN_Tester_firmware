@@ -62,14 +62,14 @@ void Error_Handler(void);
 #define USER_LED_GPIO_Port GPIOB
 #define USER_BUTTON_Pin GPIO_PIN_10
 #define USER_BUTTON_GPIO_Port GPIOB
-#define CH_b0_Pin GPIO_PIN_12
-#define CH_b0_GPIO_Port GPIOB
-#define CH_b1_Pin GPIO_PIN_13
-#define CH_b1_GPIO_Port GPIOB
-#define CH_b2_Pin GPIO_PIN_14
-#define CH_b2_GPIO_Port GPIOB
-#define CH_b3_Pin GPIO_PIN_15
-#define CH_b3_GPIO_Port GPIOB
+#define CH_1_Pin GPIO_PIN_12
+#define CH_1_GPIO_Port GPIOB
+#define CH_2_Pin GPIO_PIN_13
+#define CH_2_GPIO_Port GPIOB
+#define CH_3_Pin GPIO_PIN_14
+#define CH_3_GPIO_Port GPIOB
+#define CH_4_Pin GPIO_PIN_15
+#define CH_4_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
