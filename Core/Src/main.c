@@ -93,6 +93,18 @@ int32_t printf_cdc(char *format, ...);
 
 
 
+#ifdef __GNUC__
+#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
+#else
+#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
+#endif /* __GNUC__ */
+void __io_putchar(uint8_t ch)
+{
+	HAL_UART_Transmit(&huart2, &ch, 1, 1);
+}
+
+
+
 void driveMotor_speed(uint8_t channel, float omega)
 {
 
@@ -312,6 +324,13 @@ int main(void)
 	  Error_Handler();
   }
 
+
+  //printf("Hello\n");
+
+  HAL_Delay(1000);
+
+  int count = 0;
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -334,11 +353,13 @@ int main(void)
 	  }
 	  p_button = button;
 
-	  omega_ref = omega_sign * getVolume() * 50.0f;
+	  omega_ref = omega_sign * getVolume() * 500.0f;
 
 	  driveMotor_speed(targetChannel, omega_ref);
 
 	  printf_cdc("ID:%d, speed_ref=%.1f\n", targetChannel, omega_ref);
+
+
 
 
     /* USER CODE END WHILE */
