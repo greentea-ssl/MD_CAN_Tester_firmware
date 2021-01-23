@@ -73,6 +73,13 @@ volatile uint32_t LED_blink_Ts_us = 1000;
 
 
 
+int16_t Iq_res_int16 = 0;
+uint16_t theta_res_uint16 = 0;
+int16_t omega_res_int16 = 0;
+
+
+
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -105,37 +112,40 @@ void __io_putchar(uint8_t ch)
 
 
 
-void driveMotor_speed(uint8_t channel, float omega)
+void driveMotor_speed(float Iq_ref[])
 {
 
 	uint32_t can1TxMailbox;
 	CAN_TxHeaderTypeDef can1TxHeader;
 	uint8_t can1TxData[8];
 
-	union _ctrlRef{
-		struct{
-			float fval;
-		};
-		struct{
-			uint8_t byte[4];
-		};
-	}controlRef;
+	int16_t Iq_ref_int[4];
 
-	can1TxHeader.StdId = 0x200 | ((channel & 0x07) << 5) | (0x01 << 2);
+
+	can1TxHeader.StdId = 0x300;
 	can1TxHeader.ExtId = 0x00;
 	can1TxHeader.IDE = CAN_ID_STD;
 	can1TxHeader.RTR = CAN_RTR_DATA;
-	can1TxHeader.DLC = 4;
+	can1TxHeader.DLC = 8;
 
-	controlRef.fval = omega;
+	Iq_ref_int[0] = (int16_t)(Iq_ref[0] * 2048);
+	Iq_ref_int[1] = (int16_t)(Iq_ref[1] * 2048);
+	Iq_ref_int[2] = (int16_t)(Iq_ref[2] * 2048);
+	Iq_ref_int[3] = (int16_t)(Iq_ref[3] * 2048);
 
-	can1TxData[0] = controlRef.byte[0];
-	can1TxData[1] = controlRef.byte[1];
-	can1TxData[2] = controlRef.byte[2];
-	can1TxData[3] = controlRef.byte[3];
+	can1TxData[0] = Iq_ref_int[0] & 0xff;
+	can1TxData[1] = (Iq_ref_int[0] >> 8) & 0xff;
 
+	can1TxData[2] = Iq_ref_int[1] & 0xff;
+	can1TxData[3] = (Iq_ref_int[1] >> 8) & 0xff;
 
-	HAL_CAN_ActivateNotification(&hcan1, CAN_IT_TX_MAILBOX_EMPTY);
+	can1TxData[4] = Iq_ref_int[2] & 0xff;
+	can1TxData[5] = (Iq_ref_int[2] >> 8) & 0xff;
+
+	can1TxData[6] = Iq_ref_int[3] & 0xff;
+	can1TxData[7] = (Iq_ref_int[3] >> 8) & 0xff;
+
+	//HAL_CAN_ActivateNotification(&hcan1, CAN_IT_TX_MAILBOX_EMPTY);
 
 	HAL_CAN_AddTxMessage(&hcan1, &can1TxHeader, can1TxData, &can1TxMailbox);
 
@@ -259,6 +269,29 @@ void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef * htim)
 
 
 
+
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
+{
+
+	int16_t Iq_ref_int = 0;
+
+	CAN_RxHeaderTypeDef can1RxHeader;
+	uint8_t can1RxData[8];
+
+	HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &can1RxHeader, can1RxData);
+
+	if(can1RxHeader.DLC != 8) return;
+
+	Iq_res_int16 = ((int16_t)can1RxData[2] << 8) | can1RxData[1];
+
+	theta_res_uint16 = ((uint16_t)can1RxData[4] << 8) | can1RxData[3];
+
+	omega_res_int16 = ((int16_t)can1RxData[6] << 8) | can1RxData[5];
+
+}
+
+
+
 /* USER CODE END 0 */
 
 /**
@@ -268,6 +301,9 @@ void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef * htim)
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+
+
+	CAN_FilterTypeDef sFilterConfig;
 
 	uint8_t targetChannel = 0;
 
@@ -305,6 +341,28 @@ int main(void)
   MX_USB_DEVICE_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
+
+
+	sFilterConfig.FilterBank = 0;
+	sFilterConfig.FilterMode = CAN_FILTERMODE_IDMASK;
+	sFilterConfig.FilterScale = CAN_FILTERSCALE_32BIT;
+	sFilterConfig.FilterIdHigh = 0x400 << 5;
+	sFilterConfig.FilterIdLow = 0x0000;
+	sFilterConfig.FilterMaskIdHigh = 0x7fc << 5;
+	sFilterConfig.FilterMaskIdLow = 0x0006;
+	sFilterConfig.FilterFIFOAssignment = CAN_RX_FIFO0;
+	sFilterConfig.FilterActivation = ENABLE;
+	sFilterConfig.SlaveStartFilterBank = 14;
+
+	if(HAL_CAN_ConfigFilter(&hcan1,&sFilterConfig) != HAL_OK)
+	{
+	  Error_Handler();
+	}
+
+	if(HAL_CAN_ActivateNotification(&hcan1, CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_TX_MAILBOX_EMPTY) != HAL_OK)
+	{
+	  Error_Handler();
+	}
 
   // CAN Start
   if(HAL_CAN_Start(&hcan1) != HAL_OK)
@@ -353,13 +411,17 @@ int main(void)
 	  }
 	  p_button = button;
 
-	  omega_ref = omega_sign * getVolume() * 500.0f;
+	  float Iq_ref[4] = {0.0, 0.0, 0.0, 0.0};
 
-	  driveMotor_speed(targetChannel, omega_ref);
+	  Iq_ref[targetChannel] = omega_sign * getVolume() * 15.0f;
 
-	  printf_cdc("ID:%d, speed_ref=%.1f\n", targetChannel, omega_ref);
+	  driveMotor_speed(Iq_ref);
 
+	  printf("%Iq_ref = %f\nIq_int = %6d, theta_int = %6d, omega_int = %6d\n", Iq_ref[targetChannel], Iq_res_int16, theta_res_uint16, omega_res_int16);
 
+	  printf("\e[2A");
+
+	  //printf_cdc("ID:%d, speed_ref=%.1f\n", targetChannel, Iq_ref[targetChannel]);
 
 
     /* USER CODE END WHILE */
