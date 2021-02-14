@@ -128,10 +128,10 @@ void driveMotor_speed(float Iq_ref[])
 	can1TxHeader.RTR = CAN_RTR_DATA;
 	can1TxHeader.DLC = 8;
 
-	Iq_ref_int[0] = (int16_t)(Iq_ref[0] * 2048);
-	Iq_ref_int[1] = (int16_t)(Iq_ref[1] * 2048);
-	Iq_ref_int[2] = (int16_t)(Iq_ref[2] * 2048);
-	Iq_ref_int[3] = (int16_t)(Iq_ref[3] * 2048);
+	Iq_ref_int[0] = (int16_t)(Iq_ref[0] * 1024);
+	Iq_ref_int[1] = (int16_t)(Iq_ref[1] * 1024);
+	Iq_ref_int[2] = (int16_t)(Iq_ref[2] * 1024);
+	Iq_ref_int[3] = (int16_t)(Iq_ref[3] * 1024);
 
 	can1TxData[0] = Iq_ref_int[0] & 0xff;
 	can1TxData[1] = (Iq_ref_int[0] >> 8) & 0xff;
