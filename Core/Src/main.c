@@ -34,6 +34,10 @@
 
 #include "usbd_cdc_if.h"
 
+
+#include "motorTest.h"
+
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -68,6 +72,7 @@ UART_HandleTypeDef huart2;
 
 ntshell_t nts;
 
+MotorTest_TypeDef motorTest;
 
 /********** LED Control **********/
 
@@ -79,6 +84,8 @@ volatile uint32_t LED_blink_Ton_us = 50000;
 volatile uint32_t LED_blink_Toff_us = 200000;
 volatile uint32_t LED_blink_T_wait_us = 1000000;
 volatile uint32_t LED_blink_Ts_us = 1000;
+
+
 
 
 
@@ -180,6 +187,7 @@ float getVolume()
 {
 	static float rate = 0.0;
 
+#if 0
 	if (HAL_ADC_PollForConversion(&hadc1, 10) != HAL_OK)
 	{
 		Error_Handler();
@@ -188,6 +196,9 @@ float getVolume()
 	{
 		rate = HAL_ADC_GetValue(&hadc1) / 4096.0f;
 	}
+#else
+	rate = HAL_ADC_GetValue(&hadc1) / 4096.0f;
+#endif
 
 	if(HAL_ADC_Start_IT(&hadc1) != HAL_OK)
 	{
@@ -272,6 +283,12 @@ void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef * htim)
 	{
 		// 1ms
 		LED_blink();
+
+		motorTest.volume = getVolume();
+
+		MotorTest_Update(&motorTest);
+
+
 	}
 
 }
@@ -282,8 +299,6 @@ void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef * htim)
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
 
-	int16_t Iq_ref_int = 0;
-
 	CAN_RxHeaderTypeDef can1RxHeader;
 	uint8_t can1RxData[8];
 
@@ -291,11 +306,11 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 
 	if(can1RxHeader.DLC != 8) return;
 
-	Iq_res_int16 = ((int16_t)can1RxData[2] << 8) | can1RxData[1];
+	motorTest.Iq_res_int16 = ((int16_t)can1RxData[2] << 8) | can1RxData[1];
 
-	theta_res_uint16 = ((uint16_t)can1RxData[4] << 8) | can1RxData[3];
+	motorTest.theta_res_uint16 = ((uint16_t)can1RxData[4] << 8) | can1RxData[3];
 
-	omega_res_int16 = ((int16_t)can1RxData[6] << 8) | can1RxData[5];
+	motorTest.omega_res_int16 = ((int16_t)can1RxData[6] << 8) | can1RxData[5];
 
 }
 
@@ -315,8 +330,6 @@ int main(void)
 	CAN_FilterTypeDef sFilterConfig;
 
 	uint8_t targetChannel = 0;
-
-	float omega_ref = 0.0;
 
 	int omega_sign = 1;
 
@@ -353,6 +366,8 @@ int main(void)
 
 
   ntshell_usr_init(&nts);
+
+  MotorTest_Init(&motorTest);
 
 	sFilterConfig.FilterBank = 0;
 	sFilterConfig.FilterMode = CAN_FILTERMODE_IDMASK;

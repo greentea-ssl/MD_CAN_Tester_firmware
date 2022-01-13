@@ -38,6 +38,9 @@
 #include <stdio.h>
 
 #include "main.h"
+#include "motorTest.h"
+
+extern MotorTest_TypeDef motorTest;
 
 
 #define uart_puts(str) puts(str)
@@ -197,18 +200,29 @@ static int usrcmd_view(int argc, char **argv)
 {
 	char c;
 
-	while(1)
-	{
-		HAL_Delay(100);
-		c = ntshell_serial_getc_timeout(1);
-		//printf("recv:0x%02x\r\n", c);
-		printf("recv:%c\r\n", c);
-		if(c == 0x03)
-		{
-			puts("\r\n^C\r\n");
-			break;
-		}
+	if(argc != 2) {
+		uart_puts("info vol\r\n");
+		return 0;
 	}
+
+    if (ntlibc_strcmp(argv[1], "vol") == 0) {
+    	while(1)
+		{
+			HAL_Delay(100);
+
+			printf("volume = %f\r\n", motorTest.volume);
+
+			c = ntshell_serial_getc_timeout(1);
+			if(c == 0x03)
+			{
+				puts("\r\n^C\r\n");
+				break;
+			}
+		}
+        return 0;
+    }
+
+
 
 	return 0;
 }

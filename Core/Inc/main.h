@@ -43,7 +43,14 @@ extern "C" {
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
 
+
 extern UART_HandleTypeDef huart2;
+extern ADC_HandleTypeDef hadc1;
+
+
+extern volatile uint32_t LED_blink_times;
+
+
 
 /* USER CODE END EC */
 
@@ -56,6 +63,9 @@ extern UART_HandleTypeDef huart2;
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
+
+uint8_t getChannel();
+void driveMotor_speed(float Iq_ref[]);
 
 /* USER CODE END EFP */
 
