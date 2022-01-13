@@ -205,12 +205,30 @@ static int usrcmd_view(int argc, char **argv)
 		return 0;
 	}
 
-    if (ntlibc_strcmp(argv[1], "vol") == 0) {
+    if(ntlibc_strcmp(argv[1], "vol") == 0) {
     	while(1)
 		{
 			HAL_Delay(100);
 
 			printf("volume = %f\r\n", motorTest.volume);
+
+			c = ntshell_serial_getc_timeout(1);
+			if(c == 0x03)
+			{
+				puts("\r\n^C\r\n");
+				break;
+			}
+		}
+        return 0;
+    }
+    else if(ntlibc_strcmp(argv[1], "asr") == 0) {
+    	while(1)
+		{
+			HAL_Delay(100);
+
+			printf("%Iq_ref = %f\nIq_int = %6f, theta = %6f, omega = %6f\n", motorTest.Iq_ref, motorTest.Iq_res, motorTest.theta_res, motorTest.omega_res);
+
+			printf("\e[2A");
 
 			c = ntshell_serial_getc_timeout(1);
 			if(c == 0x03)

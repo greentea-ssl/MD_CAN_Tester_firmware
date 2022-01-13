@@ -360,7 +360,7 @@ int main(void)
   MX_ADC1_Init();
   MX_CAN1_Init();
   MX_USART2_UART_Init();
-  MX_USB_DEVICE_Init();
+  //MX_USB_DEVICE_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
 

@@ -6,6 +6,10 @@
 
 #include <stdint.h>
 
+#include "../ControlLib/controlLib.h"
+
+
+
 
 typedef enum
 {
@@ -19,6 +23,9 @@ typedef struct
 
 	TestMode mode;
 
+	DOB_TypeDef dob;
+	float Kp;
+
 	float omega_ref;
 	int ref_sign;
 
@@ -27,14 +34,25 @@ typedef struct
 	int targetChannel;
 	float volume;
 
-
 	int16_t Iq_res_int16;
 	uint16_t theta_res_uint16;
 	int16_t omega_res_int16;
 
+	float Iq_res;
+	float theta_res;
+	float omega_res;
 
 	uint8_t button;
 	uint8_t p_button;
+
+
+	// ASR
+
+	float Ktn;
+	float Jmn;
+	float gdis;
+	float Ts;
+
 
 
 }MotorTest_TypeDef;
