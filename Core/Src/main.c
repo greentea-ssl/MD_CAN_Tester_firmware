@@ -29,6 +29,9 @@
 #include <string.h>
 #include <stdarg.h>
 
+#include "ntshell.h"
+#include "usrcmd.h"
+
 #include "usbd_cdc_if.h"
 
 /* USER CODE END Includes */
@@ -40,6 +43,10 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+
+
+#define uart_puts(str) puts(str)
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -58,6 +65,8 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 
+
+ntshell_t nts;
 
 
 /********** LED Control **********/
@@ -343,6 +352,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
 
+  ntshell_usr_init(&nts);
+
 	sFilterConfig.FilterBank = 0;
 	sFilterConfig.FilterMode = CAN_FILTERMODE_IDMASK;
 	sFilterConfig.FilterScale = CAN_FILTERSCALE_32BIT;
@@ -395,6 +406,11 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+
+
+	  ntshell_execute(&nts);
+
+
 
 	  HAL_Delay(10);
 
