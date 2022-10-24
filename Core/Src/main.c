@@ -170,11 +170,32 @@ void driveMotor_speed(float Iq_ref[])
 
 
 
+void requestMotorParam()
+{
+
+	uint32_t can1TxMailbox;
+	CAN_TxHeaderTypeDef can1TxHeader;
+	uint8_t can1TxData[8];
+
+	can1TxHeader.StdId = 0x310;
+	can1TxHeader.ExtId = 0x00;
+	can1TxHeader.IDE = CAN_ID_STD;
+	can1TxHeader.RTR = CAN_RTR_DATA;
+	can1TxHeader.DLC = 0;
+
+	//HAL_CAN_ActivateNotification(&hcan1, CAN_IT_TX_MAILBOX_EMPTY);
+
+	HAL_CAN_AddTxMessage(&hcan1, &can1TxHeader, can1TxData, &can1TxMailbox);
+
+	return;
+}
+
+
 uint8_t getChannel()
 {
 	uint8_t ch = 0;
 
-	ch |= !HAL_GPIO_ReadPin(CH_1_GPIO_Port, CH_1_Pin) << 2;
+	//ch |= !HAL_GPIO_ReadPin(CH_1_GPIO_Port, CH_1_Pin) << 2;
 	ch |= !HAL_GPIO_ReadPin(CH_2_GPIO_Port, CH_2_Pin) << 1;
 	ch |= !HAL_GPIO_ReadPin(CH_3_GPIO_Port, CH_3_Pin) << 0;
 	//ch |= !HAL_GPIO_ReadPin(CH_4_GPIO_Port, CH_4_Pin) << 3;
@@ -304,13 +325,24 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 
 	HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &can1RxHeader, can1RxData);
 
-	if(can1RxHeader.DLC != 8) return;
+	if(can1RxHeader.StdId == (0x400 + getChannel()) && can1RxHeader.DLC == 8)
+	{
+		motorTest.Iq_res_int16 = ((int16_t)can1RxData[2] << 8) | can1RxData[1];
+		motorTest.theta_res_uint16 = ((uint16_t)can1RxData[4] << 8) | can1RxData[3];
+		motorTest.omega_res_int16 = ((int16_t)can1RxData[6] << 8) | can1RxData[5];
+		return;
+	}
+	if(can1RxHeader.StdId == (0x410 + getChannel()) && can1RxHeader.DLC == 4)
+	{
+		uint16_t motor_kv = ((int16_t)can1RxData[1] << 8) | can1RxData[0];
+		uint16_t Irated_uint16 = ((uint16_t)can1RxData[3] << 8) | can1RxData[2];
+		float Irated = Irated_uint16 / 1024.0f;
+		printf("ch = %d\n", can1RxHeader.StdId & 0x003);
+		printf("KV = %d\n", motor_kv);
+		printf("Irated = %f\n", Irated);
+		return;
+	}
 
-	motorTest.Iq_res_int16 = ((int16_t)can1RxData[2] << 8) | can1RxData[1];
-
-	motorTest.theta_res_uint16 = ((uint16_t)can1RxData[4] << 8) | can1RxData[3];
-
-	motorTest.omega_res_int16 = ((int16_t)can1RxData[6] << 8) | can1RxData[5];
 
 }
 
@@ -374,7 +406,7 @@ int main(void)
 	sFilterConfig.FilterScale = CAN_FILTERSCALE_32BIT;
 	sFilterConfig.FilterIdHigh = 0x400 << 5;
 	sFilterConfig.FilterIdLow = 0x0000;
-	sFilterConfig.FilterMaskIdHigh = 0x7fc << 5;
+	sFilterConfig.FilterMaskIdHigh = 0x70c << 5;
 	sFilterConfig.FilterMaskIdLow = 0x0006;
 	sFilterConfig.FilterFIFOAssignment = CAN_RX_FIFO0;
 	sFilterConfig.FilterActivation = ENABLE;
@@ -402,6 +434,13 @@ int main(void)
 	  Error_Handler();
   }
 
+
+
+  printf("Send request to main.\n");
+  requestMotorParam();
+
+  HAL_Delay(500);
+
   // Timer Start
   if(HAL_TIM_Base_Start_IT(&htim1) != HAL_OK)
   {
@@ -412,6 +451,7 @@ int main(void)
   //printf("Hello\n");
 
   HAL_Delay(1000);
+
 
   int count = 0;
 
