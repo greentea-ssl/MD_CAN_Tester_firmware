@@ -27,6 +27,7 @@ void MotorTest_Init(MotorTest_TypeDef *hMotorTest)
 	h->Iq_res_int16 = 0;
 	h->theta_res_uint16 = 0;
 	h->omega_res_int16 = 0;
+	h->status_code = 0;
 
 	h->Kp = 0.1;
 

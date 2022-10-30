@@ -41,6 +41,7 @@ typedef struct
 	float Iq_res;
 	float theta_res;
 	float omega_res;
+	uint8_t status_code;
 
 	uint8_t button;
 	uint8_t p_button;

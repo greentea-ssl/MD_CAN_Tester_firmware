@@ -327,6 +327,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 
 	if(can1RxHeader.StdId == (0x400 + getChannel()) && can1RxHeader.DLC == 8)
 	{
+		motorTest.status_code = can1RxData[0];
 		motorTest.Iq_res_int16 = ((int16_t)can1RxData[2] << 8) | can1RxData[1];
 		motorTest.theta_res_uint16 = ((uint16_t)can1RxData[4] << 8) | can1RxData[3];
 		motorTest.omega_res_int16 = ((int16_t)can1RxData[6] << 8) | can1RxData[5];

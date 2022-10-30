@@ -226,7 +226,9 @@ static int usrcmd_view(int argc, char **argv)
 		{
 			HAL_Delay(100);
 
-			printf("%Iq_ref = %f\nIq_int = %6f, theta = %6f, omega = %6f\n", motorTest.Iq_ref, motorTest.Iq_res, motorTest.theta_res, motorTest.omega_res);
+			printf("%Iq_ref = %f\n", motorTest.Iq_ref);
+			printf("Iq_int = %6f, theta = %6f, omega = %6f, status code = 0x%02x  \n"
+					, motorTest.Iq_res, motorTest.theta_res, motorTest.omega_res, motorTest.status_code);
 
 			printf("\e[2A");
 
